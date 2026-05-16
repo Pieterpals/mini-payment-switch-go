@@ -1,0 +1,181 @@
+basePath: /
+definitions:
+  response.ErrorInfo:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/response.ErrorInfo'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  usecase.CheckStatusResponse:
+    properties:
+      account_no:
+        type: string
+      amount:
+        type: number
+      status:
+        type: string
+      trx_id:
+        type: string
+    type: object
+  usecase.ExecutePaymentRequest:
+    properties:
+      inquiry_id:
+        type: string
+    type: object
+  usecase.ExecutePaymentResponse:
+    properties:
+      status:
+        type: string
+      trx_id:
+        type: string
+    type: object
+  usecase.InquiryRequest:
+    properties:
+      account_no:
+        type: string
+      amount:
+        type: number
+    type: object
+  usecase.InquiryResponse:
+    properties:
+      account_no:
+        type: string
+      admin_fee:
+        type: number
+      amount:
+        type: number
+      inquiry_id:
+        type: string
+      total:
+        type: number
+    type: object
+host: localhost:8182
+info:
+  contact: {}
+  description: This is a modular payment switch API with inquiry, execute, and status
+    check.
+  title: Mini Payment Switch API
+  version: "1.0"
+paths:
+  /api/v1/payments/execute:
+    post:
+      consumes:
+      - application/json
+      description: Processes payment using an inquiry ID
+      parameters:
+      - description: Execute Payment Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/usecase.ExecutePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/usecase.ExecutePaymentResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Execute Payment
+      tags:
+      - Payments
+  /api/v1/payments/inquiry:
+    post:
+      consumes:
+      - application/json
+      description: Validates account and calculates fees before payment
+      parameters:
+      - description: Inquiry Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/usecase.InquiryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/usecase.InquiryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Payment Inquiry
+      tags:
+      - Payments
+  /api/v1/payments/status/{trx_id}:
+    get:
+      description: Retrieves the current status of a transaction
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: trx_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/usecase.CheckStatusResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Check Payment Status
+      tags:
+      - Payments
+swagger: "2.0"
